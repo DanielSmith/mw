@@ -43,7 +43,7 @@ Depending on how you deploy the server side (MAMP), you may need to change a few
 
 For the server:
 
-If the document root for the server side is not based on mwserver, you will want to prepend to "/assets/photos" and "/assets/story" i functions.php (example: for my digital ocean deploy, I changed this to "/mw/mwserver/assets/photos" and "/mw/mwserver/assets/story")
+If the document root for the server side is not based on mwserver, you will want to prepend to "/assets/photos" and "/assets/story" in functions.php (example: for my digital ocean deploy, I changed this to "/mw/mwserver/assets/photos" and "/mw/mwserver/assets/story")
 
 Make sure to create the following directory structure under mwserver:
 
@@ -76,6 +76,7 @@ The story is presented in an element which is contenteditable.
 When the user picks a spot in the editable section, some html is inserted for the image tag of the most recently uploaded photo.  The tag includes a title attribute, which uses the Location, Description, and Tags fields.
 
 When updateStory() is called, we send the innerHTML to the server side to be saved.
+
 Notes:
 
 When we upload a photo, we wait for the response, so that we know what the permanent location is to get to it.  That gives us most of what we need for the image tag we'll insert.  The Location, Description, and Tags fields give us the rest.
