@@ -1,0 +1,125 @@
+
+
+Notes for mwclient and mwserver
+
+Sections:
+
+Usage, Deploying / Installing, Code Commentary, and Next Steps
+
+- Usage
+
+The test page for this can be found via daniel.org/mw (go to the IP address link)
+
+1) The intial view shows a drop area for a photo.  Once you drop a photo there, it is automatically uploaded to the server.
+
+2) The top of the page changes to inputs for photo attributes: Location, Description, and Tags.  Enter whatever you'd like there.  Do not hit submit at this time.
+
+3) Pick a spot in the story, and the photo will appear.
+
+4) Hit the "update story" button to save your changes
+
+
+
+- Deploying / Installing
+
+The test was developed using MAMP for the PHP server side, and npm/webpack for the client.
+
+For the client:
+
+npm init
+npm run dev
+
+Depending on how you deploy the server side (MAMP), you may need to change a few lines in mwclient/src/components/StoryEdit.vue.  These are the server paths (change mwstory.dev to what you are using):
+
+  <multiple-file-uploader
+    postURL="http://mwstory.dev?cmd=addPhoto"
+    successMessagePath=""
+    errorMessagePath="">          
+  </multiple-file-uploader>
+
+  axios.post('http://mwstory.dev?cmd=updateStory', params)
+
+  axios.get(`http://mwstory.dev`)
+
+For the server:
+
+If the document root for the server side is not based on mwserver, you will want to prepend to "/assets/photos" and "/assets/story" i functions.php (example: for my digital ocean deploy, I changed this to "/mw/mwserver/assets/photos" and "/mw/mwserver/assets/story")
+
+- Code Commentary
+
+General / Storage:
+
+I was unsure about adding a database setup requirement, so I did things strictly with PHP and the filesystem.  The photos and story files use a timestamp-derived name.  This keeps them in a natural sorting order, so that it is easy to tell which is most recent.  No external files are needed to keep track of the "most recent" version of the story.  It would be easy to add a feature to walk back through the story history.
+
+Client Side:
+
+MultipleFileUploader.vue - comes from https://github.com/abarta/vue2-multi-uploader.  I changed a few things in it to allow for automatic upload upon file drop.
+
+EventBus.js - set up a communication mechanism so that the file upload code can pass an object to the StoryEdit side.
+
+StoryEdit.vue - This is very much the heart of this Vue.js app.  It makes 3 API calls to the server side:
+
+- upon startup - call getStory() to get the most recent version
+- upon file drop - tell the file uploader to call addPhoto()
+- upon "update story" - read the inner html and send to server via updateStory()
+
+The story is presented in an element which is contenteditable.
+When the user picks a spot in the editable section, some html is inserted for the image tag of the most recently uploaded photo.  The tag includes a title attribute, which uses the Location, Description, and Tags fields.
+
+When updateStory() is called, we send the innerHTML to the server side to be saved.
+Notes:
+
+When we upload a photo, we wait for the response, so that we know what the permanent location is to get to it.  That gives us most of what we need for the image tag we'll insert.  The Location, Description, and Tags fields give us the rest.
+
+Not only can we pick a point to insert the photo, but we could click outside the edit area, click back inside, and insert the photo again.
+
+---------------
+Server Side:
+
+index.php - simple wrapper to figure out which API call we want: getStory, addPhoto, or updateStory.  We call fibonacci(34) to simulate a heavy server load.
+
+functions.php - implement the API.
+
+Notes:
+
+Timestamp names take the form of <secs>_<usecs>:
+
+1494697813_0.27134200.json
+1494698161_0.25552200.json
+1494698346_0.05539800.json
+1494698393_0.81148000.json
+
+Although the stories are saved to a filename with a json extension, we're not yet saving true JSON (just escaping strings).  I did that for the future, in case there are going to be more fields.
+
+Same idea for photos:
+
+1494697797_0.35756300.png
+1494698138_0.15799700.jpg
+1494698170_0.65064100.png
+1494698336_0.24549600.png
+
+For incoming photos, I take note of the incoming filename extension and normalize it (Jpeg, JPEG, jpeg, and jpg would all become "jpg")
+
+When looking up the most recent story (since we dont have a DB), we do a scandir() on the story directory.
+
+There is a currently unused scanndir() call for photos as well.. the thinking there being to present an image gallery on the client side.
+
+
+- Next Steps
+
+Use a real database.
+
+Possibly write the server side in node.js.  I could have gone either way on that.
+
+Using timestamps for filenames is good, but would fall apart if two requests came in for the same millisecond.
+
+Show an image preview of the photo, as soon as it is dropped.
+
+Exclude some photo types if they are not open formats.
+
+This implementation does not address what happens when two or more users start editing from the same point in time, but submit their differing updates later.  The last update wins, but may not have the photos and edits from the second-to-last update, etc.
+
+Allow for multiple photos and other media to be dropped in at the same time.
+
+
+
