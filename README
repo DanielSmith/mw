@@ -45,6 +45,15 @@ For the server:
 
 If the document root for the server side is not based on mwserver, you will want to prepend to "/assets/photos" and "/assets/story" i functions.php (example: for my digital ocean deploy, I changed this to "/mw/mwserver/assets/photos" and "/mw/mwserver/assets/story")
 
+Make sure to create the following directory structure under mwserver:
+
+assets/
+  story/
+  photos/
+
+The directories need to be writeable by the web server, so that file uploads and story writes can function.
+
+
 - Code Commentary
 
 General / Storage:
